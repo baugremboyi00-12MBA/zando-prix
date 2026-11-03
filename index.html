@@ -40,7 +40,7 @@ header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; b
 .brand h1 { margin: 0; font: 800 26px/1.1 var(--display); letter-spacing: -.01em; }
 .brand p { margin: 0; font-size: 13px; opacity: .9; }
 nav { display: flex; gap: 2px; padding-block: 10px 0; }
-nav button { flex: 1; min-width: 0; min-height: 44px; padding-inline: 2px; border: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--on-brand); font: 700 14.5px var(--body); cursor: pointer; }
+nav button { flex: 1; min-width: 0; min-height: 44px; padding-inline: 2px; border: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--on-brand); font: 700 13.5px var(--body); cursor: pointer; }
 nav button[aria-current="page"] { background: var(--bg); color: var(--fg); }
 .pagne { height: 10px; background-color: var(--sun); background-image: linear-gradient(45deg, var(--brand) 25%, transparent 25%, transparent 75%, var(--brand) 75%), linear-gradient(45deg, var(--brand) 25%, transparent 25%, transparent 75%, var(--brand) 75%); background-size: 10px 10px; background-position: 0 0, 5px 5px; }
 main { padding-block: 16px 48px; }
@@ -102,9 +102,16 @@ form { display: flex; flex-direction: column; gap: 14px; }
 .entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
 .entry .price { font: 600 16px var(--display); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .entry .actions { grid-column: 1 / -1; display: flex; gap: 6px; padding-top: 4px; }
+.star { color: var(--sun); }
+.actions-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.line { display: grid; grid-template-columns: minmax(0, 1fr) 84px auto auto; align-items: center; gap: 8px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+.line input { min-height: 40px; padding: 4px 8px; }
+.line .sum { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.total { font: 800 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.add-row { display: grid; grid-template-columns: minmax(0, 1fr) 84px auto; align-items: end; gap: 8px; }
 .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 @media (max-width: 600px) { .filters { grid-template-columns: 1fr 1fr; } .filters label:last-child { grid-column: 1 / -1; } }
-@media (max-width: 480px) { .two { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .two { grid-template-columns: 1fr; } .line { grid-template-columns: minmax(0, 1fr) 72px auto; } .line .sum { grid-column: 1 / 2; text-align: left; } .add-row { grid-template-columns: minmax(0, 1fr) 72px; } .add-row button { grid-column: 1 / -1; } }
 </style>
 </head>
 <body>
@@ -118,6 +125,7 @@ form { display: flex; flex-direction: column; gap: 14px; }
     <nav aria-label="Écrans">
       <button id="t-prix" type="button" data-view="prix">Prix</button>
       <button id="t-territoire" type="button" data-view="territoire">Territoire</button>
+      <button id="t-panier" type="button" data-view="panier">Panier</button>
       <button id="t-signaler" type="button" data-view="signaler">Signaler</button>
       <button id="t-releves" type="button" data-view="releves">Relevés</button>
     </nav>
@@ -146,6 +154,7 @@ form { display: flex; flex-direction: column; gap: 14px; }
       <div id="empty-text"></div>
       <button class="btn" type="button" data-view="signaler">Signaler un prix</button>
     </div>
+    <div id="moves" class="block" hidden></div>
     <div id="list" class="group"></div>
     <div id="legend" class="muted small" style="display:flex;flex-direction:column;gap:6px"></div>
   </section>
@@ -158,6 +167,27 @@ form { display: flex; flex-direction: column; gap: 14px; }
       <p id="terr-sum" class="muted" style="margin:4px 0 0"></p>
     </div>
     <div id="terr-list" class="rows"></div>
+  </section>
+
+  <section id="v-panier" hidden>
+    <div>
+      <h2>Mon panier</h2>
+      <p class="muted" style="margin:4px 0 0">Prépare tes courses et estime ton budget. Le panier reste sur ce téléphone.</p>
+    </div>
+    <label for="b-zone">Prix pour
+      <select id="b-zone"></select>
+    </label>
+    <div class="add-row">
+      <label for="b-produit">Produit
+        <select id="b-produit"></select>
+      </label>
+      <label for="b-qte">Quantité
+        <input id="b-qte" type="number" inputmode="decimal" min="0.5" max="1000" step="0.5" value="1">
+      </label>
+      <button id="b-add" class="btn" type="button">Ajouter</button>
+    </div>
+    <div id="b-lines"></div>
+    <div id="b-compare"></div>
   </section>
 
   <section id="v-signaler" hidden>
@@ -277,7 +307,7 @@ form { display: flex; flex-direction: column; gap: 14px; }
 
   var CFG = window.ZANDO_CONFIG || {};
   var API = CFG.supabaseUrl && CFG.supabaseKey ? CFG.supabaseUrl.replace(/\/+$/, "") : null;
-  var S = { docs: [], server: [], queue: [], jetons: {}, est: [], source: null, readOnly: false, loaded: false, flushing: false, savedAt: null, dept: "", ville: "", q: "", cat: -1, view: "prix", detail: null, confirmed: null, armed: null };
+  var S = { favs: [], basket: {}, bZone: "", docs: [], server: [], queue: [], jetons: {}, est: [], source: null, readOnly: false, loaded: false, flushing: false, savedAt: null, dept: "", ville: "", q: "", cat: -1, view: "prix", detail: null, confirmed: null, armed: null };
   var $ = function (id) { return document.getElementById(id); };
   var money = new Intl.NumberFormat("fr-FR");
   function esc(v) { return String(v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
@@ -377,7 +407,7 @@ form { display: flex; flex-direction: column; gap: 14px; }
   function renderFilters() {
     S.dept = fillSelect($("f-dept"), "Tout le pays", DEPT_NAMES, S.dept);
     S.ville = fillSelect($("f-ville"), "Toutes les villes", citiesFor(S.dept), S.ville);
-    $("f-cats").innerHTML = ['<button class="chip" type="button" data-cat="-1" aria-pressed="' + (S.cat === -1) + '">Tout</button>'].concat(CATS.map(function (c, i) {
+    $("f-cats").innerHTML = ['<button class="chip" type="button" data-cat="-1" aria-pressed="' + (S.cat === -1) + '">Tout</button>', '<button class="chip" type="button" data-cat="-2" aria-pressed="' + (S.cat === -2) + '">★ Favoris</button>'].concat(CATS.map(function (c, i) {
       return '<button class="chip" type="button" data-cat="' + i + '" aria-pressed="' + (S.cat === i) + '">' + esc(c) + "</button>";
     })).join("");
   }
@@ -386,13 +416,13 @@ form { display: flex; flex-direction: column; gap: 14px; }
   function renderList() {
     var q = norm(S.q.trim());
     var html = CATS.map(function (cat, i) {
-      if (S.cat !== -1 && S.cat !== i) return "";
-      var items = PRODUCTS.filter(function (p) { return p.cat === i && (!q || norm(p.name).indexOf(q) >= 0); })
+      if (S.cat >= 0 && S.cat !== i) return "";
+      var items = PRODUCTS.filter(function (p) { return p.cat === i && (!q || norm(p.name).indexOf(q) >= 0) && (S.cat !== -2 || S.favs.indexOf(p.id) >= 0); })
         .map(function (p) { return { p: p, s: stats(p.id), e: estimate(p.id) }; })
         .sort(function (a, b) { return ((b.s.median !== null || b.e) ? 1 : 0) - ((a.s.median !== null || a.e) ? 1 : 0); });
       if (!items.length) return "";
       return "<h3>" + esc(cat) + '</h3><div class="rows">' + items.map(function (it) {
-        var p = it.p, s = it.s, e = it.e, nameHtml = '<span class="name">' + esc(p.name) + '</span> <span class="fmt">· ' + esc(p.fmt) + "</span>";
+        var p = it.p, s = it.s, e = it.e, nameHtml = (S.favs.indexOf(p.id) >= 0 ? '<span class="star" aria-label="Favori">★</span> ' : "") + '<span class="name">' + esc(p.name) + '</span> <span class="fmt">· ' + esc(p.fmt) + "</span>";
         var open = '<button class="row" type="button" data-p="' + p.id + '"><span>' + nameHtml + "</span>";
         if (s.median !== null) {
           var more = e ? " · estimation en ligne : " + money.format(e.median) : "";
@@ -407,12 +437,89 @@ form { display: flex; flex-direction: column; gap: 14px; }
         return '<button class="row none" type="button" data-p="' + p.id + '"><span>' + nameHtml + '</span><span class="price">' + esc(old) + "</span></button>";
       }).join("") + "</div>";
     }).join("");
-    $("list").innerHTML = html || '<p class="muted" style="margin:0">Aucun produit ne correspond à cette recherche.</p>';
+    $("list").innerHTML = html || '<p class="muted" style="margin:0">' + (S.cat === -2 && !q ? "Aucun favori pour l'instant. Ouvre un produit et touche « Ajouter aux favoris »." : "Aucun produit ne correspond à cette recherche.") + "</p>";
     var n = S.docs.filter(inScope).length, m = S.est.filter(inScope).length;
     $("summary").textContent = !S.loaded ? "Chargement des prix…" : "Pour " + scopeName() + " : " + plural(n, "relevé de terrain", "relevés de terrain") + ", " + plural(m, "marché suivi en ligne", "marchés suivis en ligne") + ".";
     $("empty").hidden = !(S.loaded && n === 0 && !S.readOnly);
     $("empty-text").textContent = m ? "Aucun relevé de terrain pour " + scopeName() + ". Seul un relevé sur place donnera le prix réel des autres denrées." : "Aucun prix disponible pour " + scopeName() + " : les sources en ligne ne couvrent pas cette zone. Un relevé sur place ouvrira le carnet.";
+    renderMoves();
     renderLegend();
+  }
+  /* Seuls les relevés de terrain comptent ici : les estimations varient trop d'un mois à l'autre. */
+  function renderMoves() {
+    var moves = PRODUCTS.map(function (p) { return { p: p, t: stats(p.id).trend }; })
+      .filter(function (m) { return m.t !== null && Math.abs(m.t) >= 1; })
+      .sort(function (a, b) { return Math.abs(b.t) - Math.abs(a.t); }).slice(0, 5);
+    $("moves").hidden = !moves.length;
+    $("moves").innerHTML = "<h3>Ce qui bouge sur 30 jours</h3>" + moves.map(function (m) {
+      return '<div class="bar"><span>' + esc(m.p.name) + ' <span class="muted small">· ' + esc(m.p.fmt) + "</span></span>" + trendHtml(m.t) + "</div>";
+    }).join("");
+  }
+  function priceFor(pid, dept) {
+    var rows = S.docs.filter(function (r) { return r.produit === pid && age(r.date) <= 30 && (!dept || r.departement === dept); });
+    if (rows.length) return { prix: median(rows.map(function (r) { return r.prix; })), source: "relevé" };
+    var vals = [];
+    S.est.forEach(function (e) { var s = e.series[pid]; if (s && (!dept || e.departement === dept)) vals.push(s[s.length - 1].p); });
+    return vals.length ? { prix: median(vals), source: "estimation" } : null;
+  }
+
+  /* ---------- Panier ---------- */
+  function basketTotal(dept) {
+    var result = { total: 0, missing: 0, estimated: 0 };
+    Object.keys(S.basket).forEach(function (pid) {
+      var price = priceFor(pid, dept);
+      if (!price) { result.missing++; return; }
+      result.total += price.prix * S.basket[pid];
+      if (price.source === "estimation") result.estimated++;
+    });
+    result.total = Math.round(result.total);
+    return result;
+  }
+  function saveBasket() { writeJson("panier", S.basket); renderBasket(); }
+  function basketText() {
+    var lines = Object.keys(S.basket).map(function (pid) {
+      var price = priceFor(pid, S.bZone), p = BY_ID[pid];
+      return "- " + p.name + " (" + p.fmt + ") x " + S.basket[pid] + " : " + (price ? money.format(Math.round(price.prix * S.basket[pid])) + " FCFA" : "prix inconnu");
+    });
+    return "Mon panier Zando Prix, " + (S.bZone || "tout le pays") + " :\n" + lines.join("\n") + "\nTotal estimé : " + money.format(basketTotal(S.bZone).total) + " FCFA";
+  }
+  function renderBasket() {
+    S.bZone = fillSelect($("b-zone"), "Tout le pays", DEPT_NAMES, S.bZone);
+    var ids = Object.keys(S.basket);
+    if (!ids.length) {
+      $("b-lines").innerHTML = '<p class="muted" style="margin:0">Ton panier est vide. Choisis un produit et sa quantité pour commencer.</p>';
+      $("b-compare").innerHTML = "";
+      return;
+    }
+    var sum = basketTotal(S.bZone), rows = ids.map(function (pid) {
+      var p = BY_ID[pid], price = priceFor(pid, S.bZone);
+      return '<div class="line"><div><strong>' + esc(p.name) + '</strong> <span class="muted small">· ' + esc(p.fmt) + "</span><br>" +
+        (price ? '<span class="tag ' + (price.source === "relevé" ? "field" : "est") + '">' + money.format(price.prix) + " FCFA · " + price.source + "</span>" : '<span class="tag todo">prix inconnu</span>') + "</div>" +
+        '<input type="number" inputmode="decimal" min="0.5" max="1000" step="0.5" aria-label="Quantité de ' + esc(p.name) + '" data-qty="' + p.id + '" value="' + S.basket[pid] + '">' +
+        '<div class="sum">' + (price ? money.format(Math.round(price.prix * S.basket[pid])) + " FCFA" : "–") + "</div>" +
+        '<button class="btn alt mini" type="button" data-rm="' + p.id + '" aria-label="Retirer ' + esc(p.name) + '">✕</button></div>';
+    }).join("");
+    var note = [];
+    if (sum.missing) note.push(plural(sum.missing, "produit sans prix n'est pas compté", "produits sans prix ne sont pas comptés"));
+    if (sum.estimated) note.push(plural(sum.estimated, "prix est une estimation", "prix sont des estimations"));
+    $("b-lines").innerHTML = '<div class="rows">' + rows + '</div><div style="padding-top:12px"><div class="muted small">Total estimé, ' + esc(S.bZone || "tout le pays") + '</div><div class="total">' + money.format(sum.total) + " FCFA</div>" +
+      (note.length ? '<div class="muted small">' + esc(note.join(". ")) + ".</div>" : "") + '</div><div class="actions-row" style="padding-top:10px"><button class="btn alt mini" type="button" data-share="panier">Partager</button><button class="btn alt mini" type="button" data-clear="1">Vider le panier</button></div>';
+    var ranked = DEPT_NAMES.map(function (d) { var t = basketTotal(d); return { d: d, total: t.total, missing: t.missing, estimated: t.estimated }; })
+      .filter(function (x) { return x.missing === 0; }).sort(function (a, b) { return a.total - b.total; });
+    $("b-compare").innerHTML = ranked.length > 1
+      ? '<h3 style="margin-bottom:6px">Le même panier selon le département</h3><div class="scroll"><table><thead><tr><th>Département</th><th class="n">Total (FCFA)</th></tr></thead><tbody>' + ranked.map(function (x) {
+          return "<tr><td>" + esc(x.d) + (x.estimated ? ' <span class="tag est">estimation</span>' : "") + '</td><td class="n">' + money.format(x.total) + "</td></tr>";
+        }).join("") + '</tbody></table></div><p class="muted small">Seuls les départements où tous ces produits ont un prix sont comparés. Le transport n\'est pas compté.</p>'
+      : '<p class="muted small" style="margin:0">Pas encore assez de prix pour comparer ce panier entre départements.</p>';
+  }
+  function share(text) {
+    var fallback = function () { window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank", "noopener"); };
+    if (navigator.share) navigator.share({ text: text, url: location.origin + location.pathname }).catch(function (e) { if (!e || e.name !== "AbortError") fallback(); });
+    else fallback();
+  }
+  function productText(pid) {
+    var p = BY_ID[pid], price = priceFor(pid, S.dept);
+    return "Zando Prix : " + p.name + " (" + p.fmt + "), " + (S.dept || "tout le pays") + " : " + (price ? money.format(price.prix) + " FCFA (" + price.source + ")" : "pas encore de prix") + ".";
   }
   function renderLegend() {
     var html = "<div><strong>Relevé :</strong> médiane des prix saisis sur le terrain ces 30 derniers jours, comparée aux 30 jours précédents.</div>";
@@ -480,6 +587,7 @@ form { display: flex; flex-direction: column; gap: 14px; }
     var s = stats(p.id), e = estimate(p.id), html = "";
     html += '<button class="btn alt mini back" type="button" data-view="prix">← Tous les prix</button>';
     html += "<div><h2>" + esc(p.name) + '</h2><div class="muted">' + esc(p.fmt) + " · " + esc(scopeName()) + "</div></div>";
+    html += '<div class="actions-row"><button class="btn alt mini" type="button" data-fav="' + p.id + '">' + (S.favs.indexOf(p.id) >= 0 ? "★ Retirer des favoris" : "☆ Ajouter aux favoris") + '</button><button class="btn alt mini" type="button" data-basket="' + p.id + '">' + (S.basket[p.id] ? "Déjà dans le panier" : "Ajouter au panier") + '</button><button class="btn alt mini" type="button" data-share="' + p.id + '">Partager</button></div>';
     if (!S.readOnly) html += '<button class="btn" type="button" data-signal="' + p.id + '">Signaler un prix pour ce produit</button>';
 
     html += '<div class="block"><div class="bar"><h3>Relevés de terrain</h3><span class="tag field">prix observés</span></div>';
@@ -487,6 +595,10 @@ form { display: flex; flex-direction: column; gap: 14px; }
       html += '<div class="hero-price">' + money.format(s.median) + ' <small>FCFA</small></div><div class="bar" style="justify-content:flex-start"><span class="muted">De ' + money.format(s.min) + " à " + money.format(s.max) + " · " + plural(s.cur.length, "relevé", "relevés") + " sur 30 jours</span>" + trendHtml(s.trend) + "</div>";
     } else {
       html += '<p class="muted" style="margin:0">Aucun relevé sur les 30 derniers jours pour cette zone.</p>';
+    }
+    if (s.cur.length > 1) {
+      var low = s.cur.reduce(function (a, b) { return b.prix < a.prix ? b : a; });
+      html += '<div><strong>Le moins cher relevé :</strong> ' + money.format(low.prix) + " FCFA, " + esc(low.marche) + " (" + esc(low.ville) + "), " + esc(fmtDate(low.date)) + "</div>";
     }
     html += fieldChart(s.rows) + zoneTable(s.cur, "Par zone, du moins cher au plus cher");
     if (s.rows.length) {
@@ -661,8 +773,8 @@ form { display: flex; flex-direction: column; gap: 14px; }
   /* ---------- Navigation et chargement ---------- */
   function show(view) {
     S.view = view;
-    ["prix", "detail", "territoire", "signaler", "releves"].forEach(function (v) { $("v-" + v).hidden = v !== view; });
-    ["prix", "territoire", "signaler", "releves"].forEach(function (v) {
+    ["prix", "detail", "territoire", "panier", "signaler", "releves"].forEach(function (v) { $("v-" + v).hidden = v !== view; });
+    ["prix", "territoire", "panier", "signaler", "releves"].forEach(function (v) {
       var on = v === view || (v === "prix" && view === "detail");
       if (on) $("t-" + v).setAttribute("aria-current", "page"); else $("t-" + v).removeAttribute("aria-current");
     });
@@ -670,7 +782,7 @@ form { display: flex; flex-direction: column; gap: 14px; }
     window.scrollTo(0, 0);
   }
   function renderAll() {
-    renderFilters(); renderList(); renderTerritory(); renderEntries(); syncForm();
+    renderFilters(); renderList(); renderTerritory(); renderBasket(); renderEntries(); syncForm();
     if (S.view === "detail") renderDetail();
   }
   function status(text) { $("status").hidden = !text; $("status").textContent = text || ""; }
@@ -685,6 +797,15 @@ form { display: flex; flex-direction: column; gap: 14px; }
       if (S.dept) { $("s-dept").value = S.dept; fillCities(S.ville); }
       syncForm(); return show("signaler");
     }
+    if (t.dataset.fav) {
+      var at = S.favs.indexOf(t.dataset.fav);
+      if (at >= 0) S.favs.splice(at, 1); else S.favs.push(t.dataset.fav);
+      writeJson("favoris", S.favs); renderList(); return renderDetail();
+    }
+    if (t.dataset.basket) { if (!S.basket[t.dataset.basket]) S.basket[t.dataset.basket] = 1; saveBasket(); return renderDetail(); }
+    if (t.dataset.share) return share(t.dataset.share === "panier" ? basketText() : productText(t.dataset.share));
+    if (t.dataset.rm) { delete S.basket[t.dataset.rm]; return saveBasket(); }
+    if (t.dataset.clear) { S.basket = {}; return saveBasket(); }
     if (t.dataset.cat !== undefined) { S.cat = +t.dataset.cat; renderFilters(); return renderList(); }
     if (t.dataset.arm !== undefined) { S.armed = t.dataset.arm || null; return renderEntries(); }
     if (t.dataset.del) {
@@ -701,6 +822,20 @@ form { display: flex; flex-direction: column; gap: 14px; }
   $("s-autre").addEventListener("input", syncForm);
   ["s-produit", "s-dept", "s-ville", "s-prix"].forEach(function (id) {
     $(id).addEventListener("input", function () { if (S.confirmed) { S.confirmed = null; $("s-go").textContent = "Enregistrer le prix"; say($("s-msg")); } });
+  });
+  $("b-zone").addEventListener("change", function () { S.bZone = this.value; renderBasket(); });
+  $("b-add").addEventListener("click", function () {
+    var qty = Number($("b-qte").value);
+    if (!(qty > 0) || qty > 1000) return;
+    S.basket[$("b-produit").value] = qty;
+    $("b-qte").value = "1";
+    saveBasket();
+  });
+  $("b-lines").addEventListener("change", function (e) {
+    var id = e.target.dataset.qty, qty = Number(e.target.value);
+    if (!id) return;
+    if (qty > 0 && qty <= 1000) S.basket[id] = qty;
+    saveBasket();
   });
   $("form").addEventListener("submit", submit);
   $("csv").addEventListener("click", exportCsv);
@@ -747,12 +882,18 @@ form { display: flex; flex-direction: column; gap: 14px; }
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () { /* le site marche aussi sans */ });
   }
 
+  S.favs = readJson("favoris", []).filter(function (id) { return BY_ID[id]; });
+  var keptBasket = readJson("panier", {});
+  Object.keys(keptBasket).forEach(function (id) { if (BY_ID[id] && keptBasket[id] > 0) S.basket[id] = keptBasket[id]; });
+  $("b-produit").innerHTML = CATS.map(function (c, i) {
+    return '<optgroup label="' + esc(c) + '">' + PRODUCTS.filter(function (p) { return p.cat === i; }).map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + " (" + esc(p.fmt) + ")</option>"; }).join("") + "</optgroup>";
+  }).join("");
   var saved = store("filtre");
   S.dept = DEPTS[saved] ? saved : "";
   initForm();
   renderAll();
   var h = location.hash.slice(1);
-  show(h === "signaler" || h === "releves" || h === "territoire" ? h : "prix");
+  show(h === "signaler" || h === "releves" || h === "territoire" || h === "panier" ? h : "prix");
   start();
 })();
 </script>

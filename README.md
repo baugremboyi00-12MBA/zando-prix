@@ -4,6 +4,9 @@ Site libre et gratuit pour suivre le prix des denrées alimentaires en républiq
 
 - **Relevés de terrain :** toute personne peut signaler un prix, même hors connexion. Le relevé part au retour du réseau.
 - **Estimations en ligne :** les prix de la Banque mondiale sont importés automatiquement. Ils couvrent 13 marchés dans 7 départements et 4 produits, et restent affichés à part des relevés.
+- **Panier :** il estime le budget des courses et compare son coût entre les départements.
+- **Favoris et partage :** chacun garde ses produits suivis sur son téléphone et peut partager un prix ou un panier, par exemple sur WhatsApp.
+- **Tendances :** les plus fortes hausses et baisses relevées sur 30 jours sont affichées.
 - **Installation sur téléphone :** le site peut être ajouté à l'écran d'accueil depuis le navigateur.
 
 ## Mise en ligne (environ 20 minutes, sans rien installer)
