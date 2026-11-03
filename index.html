@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zando Prix</title>
+<meta name="description" content="Les prix des denrées sur les marchés de la république du Congo, département par département. Libre et gratuit.">
+<meta name="theme-color" content="#0d5a43">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+/* Mise en page : colonne unique façon carnet de relevés, bandeau de pagne sous l'en-tête. */
+:root {
+  --bg: #f4f7f1; --surface: #ffffff; --fg: #15231c; --muted: #5a6b62; --line: #d8e0d6;
+  --brand: #0d5a43; --on-brand: #ffffff; --sun: #f2b705; --tomato: #bf3322; --leaf: #17794f; --sky: #1c5f8f;
+  --tomato-bg: #fbe9e5; --leaf-bg: #e2f3ea; --sun-bg: #fdf3cf; --on-sun-bg: #5f4700; --sky-bg: #e3eff8;
+  /* Polices du téléphone : aucun téléchargement, pour économiser les forfaits. */
+  --display: "Trebuchet MS", "Roboto Condensed", Roboto, "Segoe UI", system-ui, sans-serif;
+  --body: Roboto, "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1613; --surface: #17221d; --fg: #eaf1ec; --muted: #9db0a5; --line: #2b3a33;
+  --brand: #0f6e52; --on-brand: #ffffff; --sun: #f2b705; --tomato: #ff8b7a; --leaf: #62d09c; --sky: #8cc6f0;
+  --tomato-bg: #3a1c17; --leaf-bg: #143126; --sun-bg: #38300f; --on-sun-bg: #f8dd86; --sky-bg: #16303f; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #0e1613; --surface: #17221d; --fg: #eaf1ec; --muted: #9db0a5; --line: #2b3a33;
+  --brand: #0f6e52; --on-brand: #ffffff; --sun: #f2b705; --tomato: #ff8b7a; --leaf: #62d09c; --sky: #8cc6f0;
+  --tomato-bg: #3a1c17; --leaf-bg: #143126; --sun-bg: #38300f; --on-sun-bg: #f8dd86; --sky-bg: #16303f; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+:root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 400 16px/1.45 var(--body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--brand); }
+.wrap { max-width: 720px; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--brand); color: var(--on-brand); }
+.brand { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; padding-top: 12px; }
+.brand h1 { margin: 0; font: 800 26px/1.1 var(--display); letter-spacing: -.01em; }
+.brand p { margin: 0; font-size: 13px; opacity: .9; }
+nav { display: flex; gap: 2px; padding-block: 10px 0; }
+nav button { flex: 1; min-width: 0; min-height: 44px; padding-inline: 2px; border: 0; border-radius: 8px 8px 0 0; background: transparent; color: var(--on-brand); font: 700 14.5px var(--body); cursor: pointer; }
+nav button[aria-current="page"] { background: var(--bg); color: var(--fg); }
+.pagne { height: 10px; background-color: var(--sun); background-image: linear-gradient(45deg, var(--brand) 25%, transparent 25%, transparent 75%, var(--brand) 75%), linear-gradient(45deg, var(--brand) 25%, transparent 25%, transparent 75%, var(--brand) 75%); background-size: 10px 10px; background-position: 0 0, 5px 5px; }
+main { padding-block: 16px 48px; }
+section { display: flex; flex-direction: column; gap: 14px; }
+h2 { margin: 0; font: 800 22px/1.2 var(--display); text-wrap: balance; }
+h3 { margin: 0; font: 600 17px/1.25 var(--display); }
+a { color: var(--sky); }
+.muted { color: var(--muted); }
+.small { font-size: 13.5px; }
+.filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+label { display: flex; flex-direction: column; gap: 4px; font-weight: 700; font-size: 14px; min-width: 0; }
+input, select { width: 100%; min-height: 46px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--fg); font: 400 16px var(--body); }
+input:focus-visible, select:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--sun); outline-offset: 1px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 36px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--fg); font: 500 14px var(--body); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
+.notice { padding: 12px 14px; border-radius: 8px; background: var(--sun-bg); color: var(--on-sun-bg); }
+.notice button { margin-top: 8px; }
+.group { display: flex; flex-direction: column; gap: 6px; }
+.group > h3 { padding-top: 8px; }
+.rows { border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; width: 100%; padding: 11px 2px; border: 0; border-bottom: 1px solid var(--line); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.row:hover { background: var(--surface); }
+.row .name { font-weight: 700; }
+.row .fmt { font-weight: 400; color: var(--muted); font-size: 14px; }
+.row .price { font: 600 18px var(--display); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.row .price small { font: 400 12px var(--body); color: var(--muted); }
+.row .meta { font-size: 13px; color: var(--muted); min-width: 0; }
+.row.none .price { font: 400 14px var(--body); color: var(--muted); white-space: normal; }
+.tag { justify-self: end; align-self: start; padding: 1px 7px; border-radius: 10px; font-size: 12.5px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tag.up { background: var(--tomato-bg); color: var(--tomato); }
+.tag.down, .tag.field { background: var(--leaf-bg); color: var(--leaf); }
+.tag.flat { background: var(--line); color: var(--muted); }
+.tag.est { background: var(--sky-bg); color: var(--sky); }
+.tag.todo { background: var(--sun-bg); color: var(--on-sun-bg); }
+.tags { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; }
+.btn { min-height: 46px; padding: 8px 16px; border: 0; border-radius: 8px; background: var(--brand); color: var(--on-brand); font: 700 16px var(--body); cursor: pointer; }
+.btn:disabled { opacity: .55; cursor: default; }
+.btn.alt { background: transparent; border: 1px solid var(--line); color: var(--fg); }
+.btn.mini { min-height: 36px; padding: 4px 10px; font-size: 14px; font-weight: 500; }
+.btn.warn { background: var(--tomato); color: var(--bg); }
+.back { align-self: flex-start; }
+.hero-price { font: 800 clamp(32px, 9vw, 44px)/1.05 var(--display); font-variant-numeric: tabular-nums; }
+.hero-price small { font: 500 16px var(--body); color: var(--muted); }
+.block { display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
+.chart { width: 100%; height: auto; display: block; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+th { font-size: 13px; color: var(--muted); }
+td.n, th.n { text-align: right; white-space: nowrap; }
+form { display: flex; flex-direction: column; gap: 14px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hint { font-weight: 400; color: var(--muted); font-size: 13.5px; }
+.msg { padding: 10px 12px; border-radius: 8px; }
+.msg.ok { background: var(--leaf-bg); color: var(--leaf); font-weight: 700; }
+.msg.err { background: var(--tomato-bg); color: var(--tomato); font-weight: 700; }
+.msg.warn { background: var(--sun-bg); color: var(--on-sun-bg); }
+.entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 2px; border-bottom: 1px solid var(--line); }
+.entry .price { font: 600 16px var(--display); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.entry .actions { grid-column: 1 / -1; display: flex; gap: 6px; padding-top: 4px; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+@media (max-width: 600px) { .filters { grid-template-columns: 1fr 1fr; } .filters label:last-child { grid-column: 1 / -1; } }
+@media (max-width: 480px) { .two { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Zando Prix</h1>
+      <p>Les prix des denrées sur les marchés du Congo</p>
+    </div>
+    <nav aria-label="Écrans">
+      <button id="t-prix" type="button" data-view="prix">Prix</button>
+      <button id="t-territoire" type="button" data-view="territoire">Territoire</button>
+      <button id="t-signaler" type="button" data-view="signaler">Signaler</button>
+      <button id="t-releves" type="button" data-view="releves">Relevés</button>
+    </nav>
+  </div>
+  <div class="pagne" aria-hidden="true"></div>
+</header>
+
+<main class="wrap">
+  <div id="status" class="notice" role="status" hidden style="margin-bottom:14px"></div>
+
+  <section id="v-prix">
+    <p id="summary" class="muted small" style="margin:0">Chargement des prix…</p>
+    <div class="filters">
+      <label for="f-dept">Département
+        <select id="f-dept"></select>
+      </label>
+      <label for="f-ville">Ville
+        <select id="f-ville"></select>
+      </label>
+      <label for="f-q">Produit
+        <input id="f-q" type="search" placeholder="Riz, foufou, tomate…" autocomplete="off">
+      </label>
+    </div>
+    <div id="f-cats" class="chips" role="group" aria-label="Catégories"></div>
+    <div id="empty" class="notice" hidden>
+      <div id="empty-text"></div>
+      <button class="btn" type="button" data-view="signaler">Signaler un prix</button>
+    </div>
+    <div id="list" class="group"></div>
+    <div id="legend" class="muted small" style="display:flex;flex-direction:column;gap:6px"></div>
+  </section>
+
+  <section id="v-detail" hidden></section>
+
+  <section id="v-territoire" hidden>
+    <div>
+      <h2>Le territoire, département par département</h2>
+      <p id="terr-sum" class="muted" style="margin:4px 0 0"></p>
+    </div>
+    <div id="terr-list" class="rows"></div>
+  </section>
+
+  <section id="v-signaler" hidden>
+    <h2>Signaler un prix</h2>
+    <p id="ro-note" class="notice" hidden style="margin:0"></p>
+    <form id="form" novalidate>
+      <label for="s-produit">Produit
+        <select id="s-produit" required></select>
+      </label>
+      <div class="two">
+        <label for="s-dept">Département
+          <select id="s-dept" required></select>
+        </label>
+        <label for="s-ville">Ville ou localité
+          <select id="s-ville" required></select>
+        </label>
+        <label for="s-autre" id="s-autre-wrap" hidden>Nom de la localité
+          <input id="s-autre" type="text" maxlength="40" autocomplete="off">
+        </label>
+        <label for="s-marche">Marché
+          <input id="s-marche" type="text" maxlength="60" list="marches" placeholder="Ex. Marché Total" autocomplete="off" required>
+          <datalist id="marches"></datalist>
+        </label>
+      </div>
+      <div class="two">
+        <label for="s-prix"><span>Prix en FCFA <span id="s-format" class="hint"></span></span>
+          <input id="s-prix" type="number" inputmode="numeric" min="1" max="10000000" step="1" required>
+        </label>
+        <label for="s-date">Date du relevé
+          <input id="s-date" type="date" required>
+        </label>
+      </div>
+      <div id="s-msg" aria-live="polite"></div>
+      <button id="s-go" class="btn" type="submit">Enregistrer le prix</button>
+    </form>
+  </section>
+
+  <section id="v-releves" hidden>
+    <div class="bar">
+      <h2>Derniers relevés de terrain</h2>
+      <button id="csv" class="btn alt mini" type="button" hidden>Télécharger en CSV</button>
+    </div>
+    <div id="csv-msg" aria-live="polite"></div>
+    <div id="entries"></div>
+  </section>
+  <p class="muted small" style="margin:24px 0 0">Zando Prix est libre et gratuit, sans compte ni publicité. Il fonctionne aussi hors connexion : les prix saisis partent dès que le réseau revient.</p>
+</main>
+
+<script src="config.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  /* Catalogue : chaque ligne a un format fixe pour que les prix restent comparables. */
+  var CATS = ["Féculents", "Céréales", "Légumes", "Protéines", "Épicerie"];
+  var PRODUCTS = [
+    ["foufou", "Foufou (farine de manioc)", "1 kg", 0],
+    ["chikwangue", "Chikwangue", "1 pièce", 0],
+    ["manioc", "Manioc frais", "1 kg", 0],
+    ["plantain", "Banane plantain", "1 régime", 0],
+    ["igname", "Igname", "1 kg", 0],
+    ["patate", "Patate douce", "1 kg", 0],
+    ["pdt", "Pomme de terre", "1 kg", 0],
+    ["riz", "Riz", "1 kg", 1],
+    ["riz-sac", "Riz", "sac de 25 kg", 1],
+    ["mais", "Maïs", "1 kg", 1],
+    ["farine", "Farine de blé", "1 kg", 1],
+    ["pain", "Pain", "1 baguette", 1],
+    ["saka", "Saka-saka (feuilles de manioc)", "1 botte", 2],
+    ["tomate", "Tomate", "1 kg", 2],
+    ["oignon", "Oignon", "1 kg", 2],
+    ["ail", "Ail", "1 kg", 2],
+    ["gombo", "Gombo", "1 kg", 2],
+    ["aubergine", "Aubergine", "1 kg", 2],
+    ["piment", "Piment", "1 kg", 2],
+    ["haricot", "Haricot", "1 kg", 3],
+    ["arachide", "Arachide", "1 kg", 3],
+    ["poisson-sale", "Poisson salé", "1 kg", 3],
+    ["poisson-fume", "Poisson fumé", "1 kg", 3],
+    ["chinchard", "Chinchard congelé", "1 kg", 3],
+    ["boeuf", "Viande de bœuf", "1 kg", 3],
+    ["poulet-cuisses", "Cuisses de poulet congelées", "1 kg", 3],
+    ["poulet", "Poulet vivant", "1 pièce", 3],
+    ["oeufs", "Œufs", "plaque de 30", 3],
+    ["huile-palme", "Huile de palme", "1 litre", 4],
+    ["huile", "Huile végétale", "1 litre", 4],
+    ["sucre", "Sucre", "1 kg", 4],
+    ["sel", "Sel", "1 kg", 4],
+    ["lait", "Lait en poudre", "1 boîte de 400 g", 4],
+    ["concentre", "Concentré de tomate", "1 boîte de 70 g", 4]
+  ].map(function (p) { return { id: p[0], name: p[1], fmt: p[2], cat: p[3] }; });
+  var BY_ID = {}; PRODUCTS.forEach(function (p) { BY_ID[p.id] = p; });
+
+  /* Les 15 départements issus des lois d'octobre 2024. Le premier nom est le chef-lieu. */
+  var DEPTS = {
+    "Bouenza": ["Madingou", "Nkayi", "Mouyondzi", "Loudima"],
+    "Brazzaville": ["Brazzaville"],
+    "Congo-Oubangui": ["Mossaka", "Loukoléla", "Liranga"],
+    "Cuvette": ["Owando", "Oyo", "Makoua", "Boundji"],
+    "Cuvette-Ouest": ["Ewo", "Kellé", "Mbomo", "Etoumbi"],
+    "Djoué-Léfini": ["Odziba", "Ngabé", "Mayama", "Ignié"],
+    "Kouilou": ["Loango", "Hinda", "Madingo-Kayes"],
+    "Lékoumou": ["Sibiti", "Zanaga", "Komono"],
+    "Likouala": ["Impfondo", "Bétou", "Dongou", "Epéna", "Enyellé"],
+    "Niari": ["Dolisie", "Mossendjo", "Kibangou", "Makabana"],
+    "Nkéni-Alima": ["Gamboma", "Ollombo", "Abala", "Allembé"],
+    "Plateaux": ["Djambala", "Lekana", "Mbon", "Ngo"],
+    "Pointe-Noire": ["Pointe-Noire"],
+    "Pool": ["Kinkala", "Mindouli", "Boko", "Kindamba"],
+    "Sangha": ["Ouesso", "Sembé", "Souanké", "Pikounda"]
+  };
+  var DEPT_NAMES = Object.keys(DEPTS);
+  var CITY_DEPT = {}; DEPT_NAMES.forEach(function (d) { DEPTS[d].forEach(function (c) { CITY_DEPT[c] = d; }); });
+  var OTHER = "__autre";
+  var MARKETS = { "Brazzaville": ["Marché Total", "Marché de Poto-Poto", "Marché de Ouenzé", "Marché de Moungali"], "Pointe-Noire": ["Grand Marché", "Marché Tié-Tié", "Marché Fouks"] };
+  var MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juill.", "août", "sept.", "oct.", "nov.", "déc."];
+
+  var CFG = window.ZANDO_CONFIG || {};
+  var API = CFG.supabaseUrl && CFG.supabaseKey ? CFG.supabaseUrl.replace(/\/+$/, "") : null;
+  var S = { docs: [], server: [], queue: [], jetons: {}, est: [], source: null, readOnly: false, loaded: false, flushing: false, savedAt: null, dept: "", ville: "", q: "", cat: -1, view: "prix", detail: null, confirmed: null, armed: null };
+  var $ = function (id) { return document.getElementById(id); };
+  var money = new Intl.NumberFormat("fr-FR");
+  function esc(v) { return String(v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem("zp-" + k); localStorage.setItem("zp-" + k, v); } catch (e) { return null; } return null; }
+  function plural(n, one, many) { return n + " " + (n > 1 ? many : one); }
+  function readJson(k, d) { try { var v = localStorage.getItem("zp-" + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+  function writeJson(k, v) { try { localStorage.setItem("zp-" + k, JSON.stringify(v)); } catch (e) { /* stockage plein ou bloqué */ } }
+  function uuid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    var b = crypto.getRandomValues(new Uint8Array(16)); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128;
+    var h = Array.prototype.map.call(b, function (x) { return x.toString(16).padStart(2, "0"); }).join("");
+    return h.slice(0, 8) + "-" + h.slice(8, 12) + "-" + h.slice(12, 16) + "-" + h.slice(16, 20) + "-" + h.slice(20);
+  }
+  function call(path, options) {
+    var o = options || {}, headers = { apikey: CFG.supabaseKey, "Content-Type": "application/json" };
+    if (/^eyJ/.test(CFG.supabaseKey)) headers.Authorization = "Bearer " + CFG.supabaseKey;
+    if (o.prefer) headers.Prefer = o.prefer;
+    return fetch(API + "/rest/v1" + path, { method: o.method || "GET", headers: headers, body: o.body ? JSON.stringify(o.body) : undefined });
+  }
+
+  function isoDay(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function today() { return isoDay(new Date()); }
+  function dayNum(s) { var p = s.split("-"); return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 864e5; }
+  function age(s) { return dayNum(today()) - dayNum(s); }
+  function shiftDate(n) { var d = new Date(); d.setDate(d.getDate() + n); return isoDay(d); }
+  function fmtDate(s) { var p = s.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }); }
+  function fmtMonth(m) { var p = String(m).split("-"); return MONTHS[+p[1] - 1] + " " + p[0]; }
+  function monthIndex(m) { var p = m.split("-"); return +p[0] * 12 + +p[1] - 1; }
+  function median(nums) { if (!nums.length) return null; var a = nums.slice().sort(function (x, y) { return x - y; }); var m = a.length >> 1; return a.length % 2 ? a[m] : Math.round((a[m - 1] + a[m]) / 2); }
+
+  function cleanDocs(rows, pending) {
+    var out = [];
+    (Array.isArray(rows) ? rows : []).forEach(function (r) {
+      if (!r || !BY_ID[r.produit] || typeof r.prix !== "number" || !(r.prix > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(r.date_releve || "") || typeof r.ville !== "string") return;
+      var dept = DEPTS[r.departement] ? r.departement : (CITY_DEPT[r.ville] || "");
+      out.push({ id: r.id, produit: r.produit, departement: dept, ville: r.ville, marche: typeof r.marche === "string" ? r.marche : "", prix: r.prix, date: r.date_releve, creeLe: r.cree_le || new Date().toISOString(), pending: !!pending });
+    });
+    return out;
+  }
+  function mergeDocs() {
+    S.docs = cleanDocs(S.queue, true).concat(S.server).sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : a.creeLe < b.creeLe ? 1 : -1; });
+  }
+  function cleanEst(list) {
+    var out = [];
+    (Array.isArray(list) ? list : []).forEach(function (r) {
+      if (!r || !r.id || !DEPTS[r.departement] || typeof r.marche !== "string" || !r.series || typeof r.series !== "object") return;
+      var series = {};
+      Object.keys(r.series).forEach(function (pid) {
+        if (!BY_ID[pid] || !Array.isArray(r.series[pid])) return;
+        var pts = r.series[pid].filter(function (x) { return x && /^\d{4}-\d{2}$/.test(x.m) && typeof x.p === "number" && x.p > 0; });
+        if (pts.length) series[pid] = pts;
+      });
+      out.push({ id: r.id, departement: r.departement, ville: typeof r.ville === "string" ? r.ville : r.departement, marche: r.marche, series: series });
+    });
+    return out;
+  }
+
+  function inScope(r) { return (!S.dept || r.departement === S.dept) && (!S.ville || r.ville === S.ville); }
+  function stats(pid) {
+    var rows = S.docs.filter(function (r) { return r.produit === pid && inScope(r); });
+    var cur = rows.filter(function (r) { return age(r.date) <= 30; });
+    var prev = rows.filter(function (r) { var a = age(r.date); return a > 30 && a <= 60; });
+    var pr = function (r) { return r.prix; };
+    var m = median(cur.map(pr)), m0 = median(prev.map(pr)), trend = null;
+    if (cur.length >= 2 && prev.length >= 2) trend = Math.round((m - m0) / m0 * 100);
+    return { rows: rows, cur: cur, median: m, min: cur.length ? Math.min.apply(null, cur.map(pr)) : null, max: cur.length ? Math.max.apply(null, cur.map(pr)) : null, trend: trend, last: rows[0] || null };
+  }
+  function estimate(pid) {
+    var ms = S.est.filter(function (e) { return inScope(e) && e.series[pid]; });
+    if (!ms.length) return null;
+    var latest = "", byMonth = {};
+    ms.forEach(function (e) { e.series[pid].forEach(function (x) { if (x.m > latest) latest = x.m; (byMonth[x.m] = byMonth[x.m] || []).push(x.p); }); });
+    var rows = [];
+    ms.forEach(function (e) { e.series[pid].forEach(function (x) { if (x.m === latest) rows.push({ departement: e.departement, ville: e.ville, marche: e.marche, prix: x.p }); }); });
+    var vals = rows.map(function (r) { return r.prix; });
+    return { month: latest, median: median(vals), min: Math.min.apply(null, vals), max: Math.max.apply(null, vals), rows: rows, byMonth: byMonth };
+  }
+  function trendHtml(t) {
+    if (t === null) return "";
+    if (Math.abs(t) < 1) return '<span class="tag flat">stable</span>';
+    return t > 0 ? '<span class="tag up">▲ +' + t + ' %</span>' : '<span class="tag down">▼ −' + Math.abs(t) + ' %</span>';
+  }
+
+  /* ---------- Écran Prix ---------- */
+  function citiesFor(dept) {
+    var seen = {}, names = [];
+    var add = function (c) { if (c && !seen[c]) { seen[c] = 1; names.push(c); } };
+    (dept ? [dept] : DEPT_NAMES).forEach(function (d) { DEPTS[d].forEach(add); });
+    S.docs.concat(S.est).forEach(function (r) { if (!dept || r.departement === dept) add(r.ville); });
+    return dept ? names : names.sort(function (a, b) { return a.localeCompare(b, "fr"); });
+  }
+  function fillSelect(sel, first, names, cur) {
+    sel.innerHTML = (first ? '<option value="">' + esc(first) + "</option>" : "") + names.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("");
+    sel.value = cur;
+    return sel.value;
+  }
+  function renderFilters() {
+    S.dept = fillSelect($("f-dept"), "Tout le pays", DEPT_NAMES, S.dept);
+    S.ville = fillSelect($("f-ville"), "Toutes les villes", citiesFor(S.dept), S.ville);
+    $("f-cats").innerHTML = ['<button class="chip" type="button" data-cat="-1" aria-pressed="' + (S.cat === -1) + '">Tout</button>'].concat(CATS.map(function (c, i) {
+      return '<button class="chip" type="button" data-cat="' + i + '" aria-pressed="' + (S.cat === i) + '">' + esc(c) + "</button>";
+    })).join("");
+  }
+  function norm(s) { return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/œ/g, "oe"); }
+  function scopeName() { return S.ville || S.dept || "tout le pays"; }
+  function renderList() {
+    var q = norm(S.q.trim());
+    var html = CATS.map(function (cat, i) {
+      if (S.cat !== -1 && S.cat !== i) return "";
+      var items = PRODUCTS.filter(function (p) { return p.cat === i && (!q || norm(p.name).indexOf(q) >= 0); })
+        .map(function (p) { return { p: p, s: stats(p.id), e: estimate(p.id) }; })
+        .sort(function (a, b) { return ((b.s.median !== null || b.e) ? 1 : 0) - ((a.s.median !== null || a.e) ? 1 : 0); });
+      if (!items.length) return "";
+      return "<h3>" + esc(cat) + '</h3><div class="rows">' + items.map(function (it) {
+        var p = it.p, s = it.s, e = it.e, nameHtml = '<span class="name">' + esc(p.name) + '</span> <span class="fmt">· ' + esc(p.fmt) + "</span>";
+        var open = '<button class="row" type="button" data-p="' + p.id + '"><span>' + nameHtml + "</span>";
+        if (s.median !== null) {
+          var more = e ? " · estimation en ligne : " + money.format(e.median) : "";
+          return open + '<span class="price">' + money.format(s.median) + " <small>FCFA</small></span>" +
+            '<span class="meta">' + money.format(s.min) + " – " + money.format(s.max) + " · " + plural(s.cur.length, "relevé", "relevés") + more + '</span><span class="tags"><span class="tag field">relevé</span>' + trendHtml(s.trend) + "</span></button>";
+        }
+        if (e) {
+          return open + '<span class="price">' + money.format(e.median) + " <small>FCFA</small></span>" +
+            '<span class="meta">' + money.format(e.min) + " – " + money.format(e.max) + " · " + plural(e.rows.length, "marché", "marchés") + " · " + esc(fmtMonth(e.month)) + '</span><span class="tag est">estimation</span></button>';
+        }
+        var old = s.last ? "Dernier prix : " + money.format(s.last.prix) + " FCFA, " + fmtDate(s.last.date) : "Pas encore de prix";
+        return '<button class="row none" type="button" data-p="' + p.id + '"><span>' + nameHtml + '</span><span class="price">' + esc(old) + "</span></button>";
+      }).join("") + "</div>";
+    }).join("");
+    $("list").innerHTML = html || '<p class="muted" style="margin:0">Aucun produit ne correspond à cette recherche.</p>';
+    var n = S.docs.filter(inScope).length, m = S.est.filter(inScope).length;
+    $("summary").textContent = !S.loaded ? "Chargement des prix…" : "Pour " + scopeName() + " : " + plural(n, "relevé de terrain", "relevés de terrain") + ", " + plural(m, "marché suivi en ligne", "marchés suivis en ligne") + ".";
+    $("empty").hidden = !(S.loaded && n === 0 && !S.readOnly);
+    $("empty-text").textContent = m ? "Aucun relevé de terrain pour " + scopeName() + ". Seul un relevé sur place donnera le prix réel des autres denrées." : "Aucun prix disponible pour " + scopeName() + " : les sources en ligne ne couvrent pas cette zone. Un relevé sur place ouvrira le carnet.";
+    renderLegend();
+  }
+  function renderLegend() {
+    var html = "<div><strong>Relevé :</strong> médiane des prix saisis sur le terrain ces 30 derniers jours, comparée aux 30 jours précédents.</div>";
+    if (S.source) {
+      html += "<div><strong>Estimation :</strong> prix calculé par un modèle de la Banque mondiale à partir d'enquêtes du PAM et de la FAO. Ce n'est pas un prix observé." +
+        (S.source.derniereEnquete ? " Dernière enquête réelle intégrée : " + esc(fmtMonth(S.source.derniereEnquete)) + "." : "") +
+        (S.source.importeLe ? " Mise à jour le " + esc(fmtDate(String(S.source.importeLe).slice(0, 10))) + "." : "") + "</div>" +
+        '<div>Source : Andrée, B. P. J. (2021), <a href="https://doi.org/10.48529/2ZH0-JF55" target="_blank" rel="noopener">Monthly food price estimates by product and market</a>, Banque mondiale' + (S.source.version ? ", version " + esc(S.source.version) : "") + ".</div>";
+    }
+    $("legend").innerHTML = html;
+  }
+
+  /* ---------- Écran Territoire ---------- */
+  function renderTerritory() {
+    var noOnline = 0;
+    $("terr-list").innerHTML = DEPT_NAMES.map(function (d) {
+      var nDocs = S.docs.filter(function (r) { return r.departement === d; }).length;
+      var ms = S.est.filter(function (e) { return e.departement === d; });
+      if (!ms.length) noOnline++;
+      var tags = (nDocs ? '<span class="tag field">' + plural(nDocs, "relevé", "relevés") + "</span>" : "") + (ms.length ? '<span class="tag est">' + plural(ms.length, "marché en ligne", "marchés en ligne") + "</span>" : "") + (!nDocs && !ms.length ? '<span class="tag todo">à relever</span>' : "");
+      var rice = median(ms.map(function (e) { var s = e.series.riz; return s ? s[s.length - 1].p : null; }).filter(function (v) { return v !== null; }));
+      var fieldRice = median(S.docs.filter(function (r) { return r.departement === d && r.produit === "riz" && age(r.date) <= 30; }).map(function (r) { return r.prix; }));
+      var note = fieldRice !== null ? "Riz : " + money.format(fieldRice) + " FCFA/kg (relevé)" : rice !== null ? "Riz : " + money.format(rice) + " FCFA/kg (estimation)" : "Aucun prix du riz pour l'instant";
+      return '<button class="row" type="button" data-dept="' + esc(d) + '"><span class="name">' + esc(d) + '</span><span class="tags">' + tags + '</span><span class="meta" style="grid-column:1/-1">Chef-lieu : ' + esc(DEPTS[d][0]) + " · " + esc(note) + "</span></button>";
+    }).join("");
+    $("terr-sum").textContent = S.loaded ? (S.est.length ? (DEPT_NAMES.length - noOnline) + " départements sur " + DEPT_NAMES.length + " ont des prix en ligne. Les " + noOnline + " autres dépendent des relevés de terrain." : "Chaque département regroupe ses villes, ses marchés et ses prix locaux.") : "Chargement des prix…";
+  }
+
+  /* ---------- Fiche produit ---------- */
+  function lineChart(pts, slots, leftLabel, rightLabel, aria, color) {
+    var W = 640, H = 200, L = 62, R = 16, T = 16, B = 30;
+    var vals = pts.map(function (p) { return p.v; }), lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    if (lo === hi) { lo = lo * 0.9; hi = hi * 1.1; }
+    var x = function (i) { return L + (W - L - R) * i / (slots - 1); }, y = function (v) { return T + (H - T - B) * (1 - (v - lo) / (hi - lo)); };
+    var line = pts.map(function (p, i) { return (i ? "L" : "M") + x(p.i).toFixed(1) + " " + y(p.v).toFixed(1); }).join(" ");
+    var last = pts[pts.length - 1];
+    var tick = function (v) { return '<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y(v).toFixed(1) + '" y2="' + y(v).toFixed(1) + '" stroke="var(--line)"/><text x="' + (L - 8) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end" font-size="13" fill="var(--muted)">' + money.format(Math.round(v)) + "</text>"; };
+    return '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(aria) + '">' + tick(hi) + tick(lo) +
+      '<text x="' + L + '" y="' + (H - 8) + '" font-size="13" fill="var(--muted)">' + esc(leftLabel) + '</text><text x="' + (W - R) + '" y="' + (H - 8) + '" text-anchor="end" font-size="13" fill="var(--muted)">' + esc(rightLabel) + "</text>" +
+      '<path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>' +
+      pts.map(function (p) { return '<circle cx="' + x(p.i).toFixed(1) + '" cy="' + y(p.v).toFixed(1) + '" r="' + (p === last ? 6 : 3.5) + '" fill="' + (p === last ? "var(--sun)" : color) + '" stroke="' + color + '"/>'; }).join("") + "</svg>";
+  }
+  function fieldChart(rows) {
+    var weeks = 12, buckets = [];
+    for (var i = 0; i < weeks; i++) buckets.push([]);
+    rows.forEach(function (r) { var k = Math.floor(age(r.date) / 7); if (k >= 0 && k < weeks) buckets[weeks - 1 - k].push(r.prix); });
+    var pts = []; buckets.forEach(function (b, n) { if (b.length) pts.push({ i: n, v: median(b) }); });
+    return pts.length ? lineChart(pts, weeks, "il y a 12 semaines", "cette semaine", "Médiane hebdomadaire des relevés sur 12 semaines", "var(--brand)") : "";
+  }
+  function estChart(e) {
+    var months = Object.keys(e.byMonth).sort(), end = monthIndex(e.month), slots = 13, pts = [];
+    months.forEach(function (m) { var i = slots - 1 - (end - monthIndex(m)); if (i >= 0) pts.push({ i: i, v: median(e.byMonth[m]) }); });
+    if (pts.length < 2) return "";
+    return lineChart(pts, slots, fmtMonth(months[0]), fmtMonth(e.month), "Estimation mensuelle du prix sur 12 mois", "var(--sky)");
+  }
+  function zoneTable(rows, head) {
+    var key = S.dept ? "ville" : "departement", groups = {};
+    rows.forEach(function (r) { var k = r[key] || "Non précisé"; (groups[k] = groups[k] || []).push(r.prix); });
+    var list = Object.keys(groups).map(function (k) { return { k: k, m: median(groups[k]), n: groups[k].length }; }).sort(function (a, b) { return a.m - b.m; });
+    if (list.length < 2) return "";
+    return "<h3>" + esc(head) + '</h3><div class="scroll"><table><thead><tr><th>' + (S.dept ? "Ville" : "Département") + '</th><th class="n">Médiane (FCFA)</th><th class="n">Relevés</th></tr></thead><tbody>' + list.map(function (c) { return "<tr><td>" + esc(c.k) + '</td><td class="n">' + money.format(c.m) + '</td><td class="n">' + c.n + "</td></tr>"; }).join("") + "</tbody></table></div>";
+  }
+  function renderDetail() {
+    var p = BY_ID[S.detail]; if (!p) return;
+    var s = stats(p.id), e = estimate(p.id), html = "";
+    html += '<button class="btn alt mini back" type="button" data-view="prix">← Tous les prix</button>';
+    html += "<div><h2>" + esc(p.name) + '</h2><div class="muted">' + esc(p.fmt) + " · " + esc(scopeName()) + "</div></div>";
+    if (!S.readOnly) html += '<button class="btn" type="button" data-signal="' + p.id + '">Signaler un prix pour ce produit</button>';
+
+    html += '<div class="block"><div class="bar"><h3>Relevés de terrain</h3><span class="tag field">prix observés</span></div>';
+    if (s.median !== null) {
+      html += '<div class="hero-price">' + money.format(s.median) + ' <small>FCFA</small></div><div class="bar" style="justify-content:flex-start"><span class="muted">De ' + money.format(s.min) + " à " + money.format(s.max) + " · " + plural(s.cur.length, "relevé", "relevés") + " sur 30 jours</span>" + trendHtml(s.trend) + "</div>";
+    } else {
+      html += '<p class="muted" style="margin:0">Aucun relevé sur les 30 derniers jours pour cette zone.</p>';
+    }
+    html += fieldChart(s.rows) + zoneTable(s.cur, "Par zone, du moins cher au plus cher");
+    if (s.rows.length) {
+      html += '<h3>Derniers relevés</h3><div class="scroll"><table><thead><tr><th>Date</th><th>Ville</th><th>Marché</th><th class="n">FCFA</th></tr></thead><tbody>' + s.rows.slice(0, 20).map(function (r) {
+        return "<tr><td>" + esc(fmtDate(r.date)) + "</td><td>" + esc(r.ville) + "</td><td>" + esc(r.marche) + '</td><td class="n">' + money.format(r.prix) + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+    }
+    html += "</div>";
+
+    if (e) {
+      var sorted = e.rows.slice().sort(function (a, b) { return a.prix - b.prix; });
+      html += '<div class="block"><div class="bar"><h3>Estimation en ligne</h3><span class="tag est">' + esc(fmtMonth(e.month)) + "</span></div>" +
+        '<div class="hero-price">' + money.format(e.median) + ' <small>FCFA</small></div><div class="muted">De ' + money.format(e.min) + " à " + money.format(e.max) + " · " + plural(e.rows.length, "marché", "marchés") + "</div>" + estChart(e) +
+        '<div class="scroll"><table><thead><tr><th>Département</th><th>Marché</th><th class="n">FCFA</th></tr></thead><tbody>' + sorted.map(function (r) { return "<tr><td>" + esc(r.departement) + "</td><td>" + esc(r.marche) + '</td><td class="n">' + money.format(r.prix) + "</td></tr>"; }).join("") + "</tbody></table></div>" +
+        (p.id === "riz" ? '<p class="muted small" style="margin:0">La source suit un riz de qualité courante.</p>' : p.id === "haricot" ? '<p class="muted small" style="margin:0">La source suit le haricot blanc.</p>' : "") +
+        '<p class="muted small" style="margin:0">Prix calculé par un modèle, à vérifier sur place avant toute décision.</p></div>';
+    }
+    $("v-detail").innerHTML = html;
+  }
+
+  /* ---------- Formulaire ---------- */
+  function initForm() {
+    $("s-produit").innerHTML = CATS.map(function (c, i) {
+      return '<optgroup label="' + esc(c) + '">' + PRODUCTS.filter(function (p) { return p.cat === i; }).map(function (p) { return '<option value="' + p.id + '">' + esc(p.name) + " (" + esc(p.fmt) + ")</option>"; }).join("") + "</optgroup>";
+    }).join("");
+    var d = store("dept");
+    fillSelect($("s-dept"), "", DEPT_NAMES, DEPTS[d] ? d : "Brazzaville");
+    fillCities(store("ville"));
+    $("s-marche").value = store("marche") || "";
+    $("s-date").value = today();
+    $("s-date").max = today();
+    $("s-date").min = shiftDate(-90);
+    syncForm();
+  }
+  function fillCities(cur) {
+    var names = DEPTS[$("s-dept").value];
+    $("s-ville").innerHTML = names.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + "</option>"; }).join("") + '<option value="' + OTHER + '">Autre localité</option>';
+    $("s-ville").value = names.indexOf(cur) >= 0 ? cur : names[0];
+  }
+  function selectedCity() { return $("s-ville").value === OTHER ? $("s-autre").value.trim() : $("s-ville").value; }
+  function syncForm() {
+    var p = BY_ID[$("s-produit").value];
+    $("s-format").textContent = p ? "pour " + p.fmt : "";
+    $("s-autre-wrap").hidden = $("s-ville").value !== OTHER;
+    var city = selectedCity(), seen = {}, names = (MARKETS[city] || []).slice();
+    S.docs.forEach(function (r) { if (r.ville === city && r.marche) names.push(r.marche); });
+    S.est.forEach(function (r) { if (r.ville === city) names.push(r.marche); });
+    $("marches").innerHTML = names.filter(function (m) { if (seen[m]) return false; seen[m] = 1; return true; }).map(function (m) { return '<option value="' + esc(m) + '"></option>'; }).join("");
+  }
+  function say(el, kind, text) {
+    if (!kind) { el.innerHTML = ""; return; }
+    el.innerHTML = '<div class="msg ' + kind + '"></div>'; el.firstChild.textContent = text;
+  }
+  function outlier(pid, dept, prix) {
+    var rows = S.docs.filter(function (r) { return r.produit === pid && age(r.date) <= 60; });
+    var local = rows.filter(function (r) { return r.departement === dept; });
+    var base = local.length >= 3 ? local : rows;
+    var m = base.length >= 3 ? median(base.map(function (r) { return r.prix; })) : null;
+    if (m === null) {
+      var vals = [];
+      S.est.forEach(function (e) { var s = e.series[pid]; if (s) vals.push(s[s.length - 1].p); });
+      m = median(vals);
+    }
+    return m !== null && (prix > m * 3 || prix < m / 3) ? m : null;
+  }
+  function saveQueue() { writeJson("file", S.queue); mergeDocs(); }
+  /* Envoie les relevés en attente, un par un. L'identifiant fixe évite les doublons si un envoi est rejoué. */
+  async function flushQueue() {
+    var result = { refused: 0, limited: false };
+    if (!API || S.flushing) return result;
+    S.flushing = true;
+    try {
+      while (S.queue.length) {
+        var res = await call("/releves", { method: "POST", prefer: "return=minimal", body: S.queue[0] });
+        if (res.ok || res.status === 409) { S.queue.shift(); saveQueue(); continue; }
+        var body = await res.json().catch(function () { return {}; });
+        if (/trop_envois/.test(body.message || "")) { result.limited = true; break; }
+        if (res.status >= 500 || res.status === 429 || res.status === 401 || res.status === 403 || res.status === 404) break;
+        S.queue.shift(); saveQueue(); result.refused++;
+      }
+    } catch (e) { /* pas de réseau : la file attend */ }
+    S.flushing = false;
+    return result;
+  }
+  async function submit(ev) {
+    ev.preventDefault();
+    var msg = $("s-msg"), pid = $("s-produit").value, dept = $("s-dept").value, city = selectedCity(), marche = $("s-marche").value.trim(), date = $("s-date").value, prix = Number($("s-prix").value);
+    if (!API) return say(msg, "err", "La saisie n'est pas encore ouverte sur ce site.");
+    if (!city) return say(msg, "err", "Indique le nom de la localité.");
+    if (!marche) return say(msg, "err", "Indique le nom du marché.");
+    if (!Number.isInteger(prix) || prix < 1 || prix > 10000000) return say(msg, "err", "Indique un prix en FCFA, en nombre entier, sans espace ni décimale.");
+    if (!date || date > today()) return say(msg, "err", "La date ne peut pas être dans le futur.");
+    if (age(date) > 90) return say(msg, "err", "Le relevé doit dater de moins de 90 jours.");
+    var key = pid + "|" + dept + "|" + prix;
+    var m = outlier(pid, dept, prix);
+    if (m !== null && S.confirmed !== key) {
+      S.confirmed = key;
+      $("s-go").textContent = "Confirmer ce prix";
+      return say(msg, "warn", "Ce prix est très éloigné du niveau habituel (" + money.format(m) + " FCFA pour " + BY_ID[pid].fmt + "). Vérifie le montant et le format, puis confirme.");
+    }
+    var go = $("s-go"); go.disabled = true; go.textContent = "Enregistrement…"; say(msg);
+    var id = uuid(), jeton = uuid();
+    S.jetons[id] = jeton; writeJson("jetons", S.jetons);
+    S.queue.push({ id: id, jeton: jeton, produit: pid, departement: dept, ville: city, marche: marche, prix: prix, date_releve: date });
+    saveQueue();
+    store("dept", dept); store("ville", city); store("marche", marche);
+    S.confirmed = null;
+    $("s-prix").value = "";
+    var label = BY_ID[pid].name + " (" + BY_ID[pid].fmt + "), " + money.format(prix) + " FCFA à " + city;
+    var result = await flushQueue();
+    var waiting = S.queue.some(function (q) { return q.id === id; });
+    if (result.refused) say(msg, "err", "Ce relevé a été refusé par la base. Vérifie le marché, le prix et la date, puis saisis-le à nouveau.");
+    else if (result.limited) say(msg, "warn", "Trop de relevés envoyés depuis cette connexion en une heure. " + label + " est gardé sur ce téléphone et repartira plus tard.");
+    else if (waiting) say(msg, "warn", "Pas de connexion : " + label + " est gardé sur ce téléphone et partira dès que le réseau revient.");
+    else say(msg, "ok", "Enregistré : " + label + ".");
+    go.disabled = false; go.textContent = "Enregistrer le prix";
+    $("s-prix").focus();
+    renderAll();
+    loadReleves();
+  }
+  function setReadOnly() {
+    S.readOnly = true;
+    $("ro-note").hidden = false;
+    $("ro-note").textContent = "La saisie n'est pas encore ouverte sur ce site. Les prix en ligne restent consultables.";
+    $("form").hidden = true;
+  }
+
+  /* ---------- Relevés ---------- */
+  function renderEntries() {
+    var box = $("entries");
+    $("csv").hidden = !(S.docs.length || S.est.length);
+    if (!S.docs.length) { box.innerHTML = '<p class="muted" style="margin:0">' + (S.loaded ? "Les prix signalés sur le terrain apparaîtront ici, du plus récent au plus ancien." : "Chargement des prix…") + "</p>"; return; }
+    box.innerHTML = '<div class="rows">' + S.docs.slice(0, 100).map(function (r) {
+      var p = BY_ID[r.produit], mine = S.jetons[r.id] && (r.pending || Date.now() - Date.parse(r.creeLe) < 864e5);
+      var act = !mine ? "" : S.armed === r.id
+        ? '<div class="actions"><button class="btn warn mini" type="button" data-del="' + esc(r.id) + '">Confirmer la suppression</button><button class="btn alt mini" type="button" data-arm="">Annuler</button></div>'
+        : '<div class="actions"><button class="btn alt mini" type="button" data-arm="' + esc(r.id) + '">Supprimer</button></div>';
+      return '<div class="entry"><div><strong>' + esc(p.name) + '</strong> <span class="muted small">· ' + esc(p.fmt) + '</span></div><div class="price">' + money.format(r.prix) + ' FCFA</div><div class="muted small" style="grid-column:1/-1">' + esc(r.marche) + ", " + esc(r.ville) + (r.departement && r.departement !== r.ville ? " (" + esc(r.departement) + ")" : "") + " · " + esc(fmtDate(r.date)) + (r.pending ? ' <span class="tag todo">en attente d\'envoi</span>' : "") + "</div>" + act + "</div>";
+    }).join("") + "</div>" + (S.docs.length > 100 ? '<p class="muted small">Les 100 relevés les plus récents sont affichés. Le fichier CSV les contient tous.</p>' : "");
+  }
+  function csvCell(v) {
+    var s = String(v);
+    if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  function exportCsv() {
+    var lines = [["Source", "Date", "Produit", "Format", "Département", "Ville", "Marché", "Prix (FCFA)"].map(csvCell).join(";")];
+    var line = function (src, date, p, r, prix) { lines.push([csvCell(src), csvCell(date), csvCell(p.name), csvCell(p.fmt), csvCell(r.departement), csvCell(r.ville), csvCell(r.marche), prix].join(";")); };
+    S.docs.forEach(function (r) { line("Relevé de terrain", r.date, BY_ID[r.produit], r, r.prix); });
+    S.est.forEach(function (e) { Object.keys(e.series).forEach(function (pid) { e.series[pid].forEach(function (x) { line("Estimation Banque mondiale", x.m, BY_ID[pid], e, x.p); }); }); });
+    var url = URL.createObjectURL(new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
+    var link = document.createElement("a");
+    link.href = url; link.download = "zando-prix-" + today() + ".csv";
+    document.body.appendChild(link); link.click(); link.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+  async function removeEntry(id) {
+    var msg = $("csv-msg"), queued = S.queue.findIndex(function (q) { return q.id === id; });
+    if (queued >= 0) { S.queue.splice(queued, 1); saveQueue(); renderAll(); return; }
+    try {
+      var res = await call("/rpc/supprimer_releve", { method: "POST", body: { p_id: id, p_jeton: S.jetons[id] } });
+      if (!res.ok) throw new Error("refus");
+      if (await res.json() === true) {
+        delete S.jetons[id]; writeJson("jetons", S.jetons);
+        say(msg);
+        S.server = S.server.filter(function (r) { return r.id !== id; });
+        mergeDocs(); renderAll();
+      } else say(msg, "err", "Ce relevé ne peut plus être supprimé : le délai de 24 heures est dépassé.");
+    } catch (e) { say(msg, "err", "Le relevé n'a pas été supprimé. Vérifie ta connexion et réessaie."); renderEntries(); }
+  }
+
+  /* ---------- Navigation et chargement ---------- */
+  function show(view) {
+    S.view = view;
+    ["prix", "detail", "territoire", "signaler", "releves"].forEach(function (v) { $("v-" + v).hidden = v !== view; });
+    ["prix", "territoire", "signaler", "releves"].forEach(function (v) {
+      var on = v === view || (v === "prix" && view === "detail");
+      if (on) $("t-" + v).setAttribute("aria-current", "page"); else $("t-" + v).removeAttribute("aria-current");
+    });
+    if (view === "detail") renderDetail();
+    window.scrollTo(0, 0);
+  }
+  function renderAll() {
+    renderFilters(); renderList(); renderTerritory(); renderEntries(); syncForm();
+    if (S.view === "detail") renderDetail();
+  }
+  function status(text) { $("status").hidden = !text; $("status").textContent = text || ""; }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest("button"); if (!t) return;
+    if (t.dataset.view) return show(t.dataset.view);
+    if (t.dataset.p) { S.detail = t.dataset.p; return show("detail"); }
+    if (t.dataset.dept) { S.dept = t.dataset.dept; S.ville = ""; store("filtre", S.dept); renderFilters(); renderList(); return show("prix"); }
+    if (t.dataset.signal) {
+      $("s-produit").value = t.dataset.signal;
+      if (S.dept) { $("s-dept").value = S.dept; fillCities(S.ville); }
+      syncForm(); return show("signaler");
+    }
+    if (t.dataset.cat !== undefined) { S.cat = +t.dataset.cat; renderFilters(); return renderList(); }
+    if (t.dataset.arm !== undefined) { S.armed = t.dataset.arm || null; return renderEntries(); }
+    if (t.dataset.del) {
+      S.armed = null; t.disabled = true;
+      removeEntry(t.dataset.del);
+    }
+  });
+  $("f-dept").addEventListener("change", function () { S.dept = this.value; S.ville = ""; store("filtre", S.dept); renderFilters(); renderList(); });
+  $("f-ville").addEventListener("change", function () { S.ville = this.value; renderList(); });
+  $("f-q").addEventListener("input", function () { S.q = this.value; renderList(); });
+  $("s-produit").addEventListener("change", syncForm);
+  $("s-dept").addEventListener("change", function () { fillCities(); $("s-marche").value = ""; syncForm(); });
+  $("s-ville").addEventListener("change", syncForm);
+  $("s-autre").addEventListener("input", syncForm);
+  ["s-produit", "s-dept", "s-ville", "s-prix"].forEach(function (id) {
+    $(id).addEventListener("input", function () { if (S.confirmed) { S.confirmed = null; $("s-go").textContent = "Enregistrer le prix"; say($("s-msg")); } });
+  });
+  $("form").addEventListener("submit", submit);
+  $("csv").addEventListener("click", exportCsv);
+
+  /* Sans réseau, le site affiche la dernière copie gardée sur le téléphone. */
+  async function loadReleves() {
+    if (!API) return;
+    try {
+      var res = await call("/releves?select=id,produit,departement,ville,marche,prix,date_releve,cree_le&order=date_releve.desc,cree_le.desc&limit=1000");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var rows = await res.json();
+      S.server = cleanDocs(rows);
+      S.savedAt = new Date().toISOString();
+      writeJson("releves", { at: S.savedAt, rows: rows });
+      status("");
+    } catch (e) {
+      status(S.savedAt
+        ? "Hors connexion : relevés enregistrés le " + fmtDate(isoDay(new Date(S.savedAt))) + ". Ils se mettront à jour au retour du réseau."
+        : "Hors connexion : les relevés de terrain s'afficheront au retour du réseau.");
+    }
+    S.loaded = true; mergeDocs(); renderAll();
+  }
+  async function loadEstimates() {
+    try {
+      var res = await fetch("data/estimations.json");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      var data = await res.json();
+      S.est = cleanEst(data.marches); S.source = data.source || null;
+    } catch (e) { /* le mode hors ligne sert la dernière copie ; sinon l'écran reste sans estimation */ }
+    if (!API) S.loaded = true;
+    renderAll();
+  }
+  async function refresh() { await flushQueue(); await loadReleves(); }
+  function start() {
+    S.queue = readJson("file", []); S.jetons = readJson("jetons", {});
+    var cached = readJson("releves", null);
+    if (cached) { S.server = cleanDocs(cached.rows); S.savedAt = cached.at; }
+    mergeDocs();
+    if (!API) setReadOnly();
+    loadEstimates();
+    refresh();
+    window.addEventListener("online", refresh);
+    setInterval(function () { if (!document.hidden) refresh(); }, 300000);
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function () { /* le site marche aussi sans */ });
+  }
+
+  var saved = store("filtre");
+  S.dept = DEPTS[saved] ? saved : "";
+  initForm();
+  renderAll();
+  var h = location.hash.slice(1);
+  show(h === "signaler" || h === "releves" || h === "territoire" ? h : "prix");
+  start();
+})();
+</script>
+</body>
+</html>

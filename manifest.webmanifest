@@ -1,0 +1,15 @@
+{
+  "name": "Zando Prix",
+  "short_name": "Zando Prix",
+  "description": "Les prix des denrées sur les marchés de la république du Congo.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f7f1",
+  "theme_color": "#0d5a43",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
