@@ -1,0 +1,72 @@
+name: Mise à jour et publication
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Lundi et jeudi : importe les nouveaux prix et garde la base Supabase active.
+    - cron: '17 6 * * 1,4'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: publication
+  cancel-in-progress: false
+
+jobs:
+  importer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Si la source est indisponible, le site reste publié avec les dernières données.
+      - name: Importer les prix de la Banque mondiale
+        id: import
+        continue-on-error: true
+        shell: powershell
+        run: .\scripts\importer-prix.ps1 -OutFile data\estimations.json
+
+      - name: Enregistrer les nouveaux prix
+        if: steps.import.outcome == 'success'
+        shell: powershell
+        run: |
+          $changes = git status --porcelain data
+          if ($changes) {
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data
+            git commit -m "Mise à jour des prix estimés"
+            git push
+          }
+
+      - name: Garder la base active
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $config = Get-Content -Raw config.js
+          $url = [regex]::Match($config, 'supabaseUrl:\s*"([^"]*)"').Groups[1].Value
+          $key = [regex]::Match($config, 'supabaseKey:\s*"([^"]*)"').Groups[1].Value
+          if ($url -and $key) {
+            Invoke-WebRequest -UseBasicParsing -Uri "$url/rest/v1/releves?select=id&limit=1" -Headers @{ apikey = $key } | Out-Null
+          }
+
+  publier:
+    needs: importer
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploiement
+        uses: actions/deploy-pages@v4
